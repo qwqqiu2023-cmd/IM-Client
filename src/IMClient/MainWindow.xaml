@@ -1,7 +1,25 @@
 <Window x:Class="IMClient.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="IM Client" Height="600" Width="900" Background="#F5F6FA">
+        Title="IM Client" Height="620" Width="980" Background="#F5F6FA">
+    <Window.Resources>
+        <Style x:Key="ChatBubble" TargetType="Border">
+            <Setter Property="CornerRadius" Value="10"/>
+            <Setter Property="Padding" Value="12"/>
+            <Setter Property="Margin" Value="0,0,0,12"/>
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="HorizontalAlignment" Value="Left"/>
+            <Setter Property="MaxWidth" Value="520"/>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsMine}" Value="True">
+                    <Setter Property="Background" Value="#E6FFFA"/>
+                    <Setter Property="HorizontalAlignment" Value="Right"/>
+                    <Setter Property="Margin" Value="40,0,0,12"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+    </Window.Resources>
+
     <Grid Margin="24">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -9,44 +27,58 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <TextBlock Text="IM Chat Client" FontSize="28" FontWeight="Bold" Foreground="#1F2A44"/>
+        <StackPanel>
+            <TextBlock Text="IM Chat Client" FontSize="28" FontWeight="Bold" Foreground="#1F2A44"/>
+            <TextBlock Text="本地演示界面，支持会话与消息列表" Foreground="#718096" Margin="0,4,0,0"/>
+        </StackPanel>
 
         <Border Grid.Row="1" Margin="0,20,0,20" Background="White" CornerRadius="12" Padding="16">
             <Grid>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="220"/>
+                    <ColumnDefinition Width="240"/>
                     <ColumnDefinition Width="16"/>
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
 
                 <StackPanel Grid.Column="0">
                     <TextBlock Text="Conversations" FontWeight="SemiBold" Foreground="#4A5568" Margin="0,0,0,12"/>
-                    <Border Background="#EEF2FF" CornerRadius="10" Padding="12" Margin="0,0,0,8">
-                        <TextBlock Text="团队群聊" Foreground="#2B6CB0"/>
-                    </Border>
-                    <Border Background="#F7FAFC" CornerRadius="10" Padding="12" Margin="0,0,0,8">
-                        <TextBlock Text="产品讨论" Foreground="#2D3748"/>
-                    </Border>
-                    <Border Background="#F7FAFC" CornerRadius="10" Padding="12">
-                        <TextBlock Text="私聊 - Luna" Foreground="#2D3748"/>
-                    </Border>
+                    <ListBox ItemsSource="{Binding Conversations}"
+                             SelectedItem="{Binding SelectedConversation}"
+                             BorderThickness="0"
+                             Background="Transparent">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Border Background="#F7FAFC" CornerRadius="10" Padding="12" Margin="0,0,0,8">
+                                    <TextBlock Text="{Binding Name}" Foreground="#2D3748"/>
+                                </Border>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
                 </StackPanel>
 
                 <Border Grid.Column="2" Background="#F7FAFC" CornerRadius="12" Padding="16">
-                    <StackPanel>
-                        <TextBlock Text="团队群聊" FontSize="18" FontWeight="SemiBold" Foreground="#1F2A44"/>
-                        <StackPanel Margin="0,16,0,0">
-                            <Border Background="White" CornerRadius="10" Padding="12" Margin="0,0,0,12">
-                                <TextBlock Text="上午 9:32  Alex: 早上好，今天我们继续同步需求。" TextWrapping="Wrap"/>
-                            </Border>
-                            <Border Background="#E6FFFA" CornerRadius="10" Padding="12" Margin="40,0,0,12" HorizontalAlignment="Right">
-                                <TextBlock Text="上午 9:34  你: 好的，我准备好了。" TextWrapping="Wrap"/>
-                            </Border>
-                            <Border Background="White" CornerRadius="10" Padding="12">
-                                <TextBlock Text="上午 9:35  Mia: 我会把会议纪要发到群里。" TextWrapping="Wrap"/>
-                            </Border>
-                        </StackPanel>
-                    </StackPanel>
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        <TextBlock Text="{Binding SelectedConversation.Name}" FontSize="18" FontWeight="SemiBold" Foreground="#1F2A44"/>
+                        <ScrollViewer Grid.Row="1" Margin="0,16,0,0" VerticalScrollBarVisibility="Auto">
+                            <ItemsControl ItemsSource="{Binding SelectedConversation.Messages}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Style="{StaticResource ChatBubble}">
+                                            <StackPanel>
+                                                <TextBlock Text="{Binding Sender}" FontWeight="SemiBold" Foreground="#2D3748"/>
+                                                <TextBlock Text="{Binding Content}" TextWrapping="Wrap" Margin="0,4,0,4"/>
+                                                <TextBlock Text="{Binding Timestamp, StringFormat={}{0:HH:mm}}" Foreground="#718096" FontSize="11"/>
+                                            </StackPanel>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </Grid>
                 </Border>
             </Grid>
         </Border>
@@ -58,8 +90,19 @@
                     <ColumnDefinition Width="12"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
-                <TextBox Grid.Column="0" Height="40" VerticalContentAlignment="Center" FontSize="14" Text="输入消息..." Foreground="#A0AEC0"/>
-                <Button Grid.Column="2" Padding="20,8" Background="#4C6EF5" Foreground="White" BorderThickness="0" FontWeight="SemiBold" Content="发送"/>
+                <TextBox Grid.Column="0"
+                         Height="40"
+                         VerticalContentAlignment="Center"
+                         FontSize="14"
+                         Text="{Binding NewMessageText, UpdateSourceTrigger=PropertyChanged}"/>
+                <Button Grid.Column="2"
+                        Padding="20,8"
+                        Background="#4C6EF5"
+                        Foreground="White"
+                        BorderThickness="0"
+                        FontWeight="SemiBold"
+                        Content="发送"
+                        Command="{Binding SendMessageCommand}"/>
             </Grid>
         </Border>
     </Grid>
